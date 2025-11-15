@@ -9,6 +9,8 @@ class Player(GameObject):
 
     def __init__(self, x: float, y: float, size: float, speed: float) -> None:
         super().__init__(x, y, size=size, speed=speed)
+        # Need two shooting variables to prevent continious shooting
+        self.was_shooting = False
         self.has_shot = False
 
     def _handle_input(self, keys) -> None:
@@ -17,7 +19,7 @@ class Player(GameObject):
         left  = keys[pygame.K_a]
         down  = keys[pygame.K_s]
         right = keys[pygame.K_d]
-        shoot = keys[pygame.K_SPACE]
+        space = keys[pygame.K_SPACE]
 
         dx = int(right) - int(left)
         dy = int(down)  - int(up)
@@ -32,8 +34,21 @@ class Player(GameObject):
         else:
             self.velocity_x = self.velocity_y = 0.0
 
-        if shoot:
+        # Only trigger a shot on the *edge* of the key press
+        # for that, only shoot if space was pressed and the
+        # player hasn't shooted before. That ensures he needs to
+        # press space every time he wants to shoot
+        if space and not self.was_shooting:
             self.has_shot = True
+        else:
+            # Do no longer shoot if with this keypress a projectile
+            # already was shot
+            self.has_shot = False
+
+        # As long as the space bar is pressed down (eventhough it's
+        # only for a short period of time) set was_shooting to true
+        # so that not more projectiles are shot
+        self.was_shooting = space
 
 
     # Triangle shape of player was also calculated by ChatGPT
