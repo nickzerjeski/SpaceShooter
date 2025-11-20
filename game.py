@@ -1,6 +1,6 @@
 import math
 import random
-from typing import List
+from typing import List, Optional
 
 import pygame
 
@@ -16,6 +16,7 @@ class Game:
     def __init__(self) -> None:
         # Initialize the game
         pygame.init()
+        self.game_over = False
         pygame.display.set_caption("Space Shooter")
         self.width = 800
         self.height = 600
@@ -57,6 +58,36 @@ class Game:
 
         Game.objects.append(Asteroid(x, y, angle=angle, size=size, speed=speed))
 
+    def _get_objects_hit(self) -> List[GameObject]:
+        projectiles = [o for o in Game.objects if isinstance(o, Projectile)]
+        asteroids = [o for o in Game.objects if isinstance(o, Asteroid)]
+        player = next(o for o in Game.objects if isinstance(o, Player))
+
+        objects_hit: List[GameObject] = []
+
+        # Projectile hits Asteroid
+        for asteroid in asteroids:
+            for projectile in projectiles:
+                dx = asteroid.x - projectile.x
+                dy = asteroid.y - projectile.y
+                radius_sum = asteroid.size + projectile.size
+
+                if dx * dx + dy * dy <= radius_sum * radius_sum:
+                    objects_hit.append(asteroid)
+                    break
+
+        # Asteroid hits player
+        for asteroid in asteroids:
+            dx = asteroid.x - player.x
+            dy = asteroid.y - player.y
+            radius_sum = asteroid.size + player.size
+
+            if dx * dx + dy * dy <= radius_sum * radius_sum:
+                self.game_over = True
+                break
+
+        return objects_hit
+
     def _update(self, dt: float) -> None:
         # Use a new list to prevent editing the original list while looping it
         new_objects: List[GameObject] = []
@@ -85,10 +116,12 @@ class Game:
             self.asteroid_spawn_timer -= self.asteroid_spawn_interval
 
         # Remove objects that are outside the boundary
-        # TODO: Game over if object is Player
+        # and asteroids that got hit by a projectile
+        objects_to_remove = self._get_objects_hit()
         Game.objects = [
             o for o in Game.objects
-            if not (o.x + o.size < 0 or
+            if o not in objects_to_remove and
+               not (o.x + o.size < 0 or
                     o.x - o.size > self.width or
                     o.y + o.size < 0 or
                     o.y - o.size > self.height)
@@ -110,7 +143,7 @@ class Game:
         # Main loop of the game
         try:
             running = True
-            while running:
+            while running and not self.game_over:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
