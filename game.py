@@ -17,6 +17,7 @@ class Game:
         # Initialize the game
         pygame.init()
         self.game_over = False
+        self.score = 0
         pygame.display.set_caption("Space Shooter")
         self.width = 800
         self.height = 600
@@ -74,6 +75,7 @@ class Game:
 
                 if dx * dx + dy * dy <= radius_sum * radius_sum:
                     objects_hit.append(asteroid)
+                    self.score += 1
                     break
 
         # Asteroid hits player
@@ -154,8 +156,9 @@ class Game:
                 self._update(dt)
                 self._render()
         finally:
+            if self.game_over:
+                print(f"Game over! Score: {self.score}")
             pygame.quit()
-
 
 # Entry Point
 if __name__ == "__main__":
