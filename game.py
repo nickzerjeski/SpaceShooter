@@ -74,7 +74,7 @@ class Game:
                 radius_sum = asteroid.size + projectile.size
 
                 if dx * dx + dy * dy <= radius_sum * radius_sum:
-                    objects_hit.append(asteroid)
+                    objects_hit.extend([asteroid, projectile])
                     self.score += 1
                     break
 
